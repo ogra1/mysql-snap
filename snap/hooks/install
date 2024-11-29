@@ -1,0 +1,24 @@
+#! /bin/sh
+
+CONFFILE=$SNAP_DATA/conf/my.cnf
+
+for dir in conf run data log files; do
+  mkdir -p $SNAP_DATA/$dir
+done
+
+chmod go-rx $SNAP_DATA/files
+
+cat << EOF >$CONFFILE
+[mysqld]
+pid-file=$SNAP_DATA/run/mysqld.pid
+socket=$SNAP_DATA/run/mysqld.sock
+datadir=$SNAP_DATA/data
+log-error=$SNAP_DATA/log/error.log
+secure-file-priv=$SNAP_DATA/files
+basedir=$SNAP/usr
+mysqlx_socket=$SNAP_DATA/run/mysqlx.sock
+[mysql]
+socket=$SNAP_DATA/run/mysqld.sock
+EOF
+
+$SNAP/usr/sbin/mysqld --defaults-file=$CONFFILE --initialize

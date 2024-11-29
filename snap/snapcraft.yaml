@@ -1,0 +1,47 @@
+name: mysql
+base: core22
+adopt-info: mysql-server
+summary: MySQL Community snap
+description: |
+  Contains the minimal set of binaries needed for the MySQL server and client.
+
+grade: stable
+confinement: strict
+
+apps:
+  mysql-server:
+    command: usr/sbin/mysqld -u root
+    daemon: simple
+    environment:
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/mysql/private"
+    plugs:
+      - network
+      - network-bind
+      - process-control
+  mysql:
+    command: usr/bin/mysql
+
+layout:
+  /etc/mysql:
+    bind: $SNAP_DATA/conf
+  /etc/services:
+    bind-file: $SNAP/etc/services
+
+parts:
+  mysql-server:
+    plugin: dump
+    source: https://downloads.mysql.com/archives/get/p/23/file/mysql-community-server-core_9.0.1-1ubuntu22.04_amd64.deb
+    stage-packages:
+      - libaio1
+      - libmecab2
+      - libnuma1
+    override-build: |
+      craftctl default
+      VER=$(zgrep -m1 "" $CRAFT_PART_INSTALL/usr/share/doc/mysql-community-server-core/changelog.Debian.gz |\
+                        sed 's/^.*(//;s/-.*$//')
+      craftctl set version="$VER"
+  mysql-client:
+    plugin: dump
+    source: https://downloads.mysql.com/archives/get/p/23/file/mysql-community-client-core_9.0.1-1ubuntu22.04_amd64.deb
+    stage-packages:
+      - netbase
